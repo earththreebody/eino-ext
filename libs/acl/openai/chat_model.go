@@ -1036,7 +1036,11 @@ func populateToolChoice(req *openai.ChatCompletionRequest, tc *schema.ToolChoice
 
 	switch *tc {
 	case schema.ToolChoiceForbidden:
-		req.ToolChoice = toolChoiceNone
+		// An empty effective tool set cannot be called. Omit the wire-only
+		// choice instead of sending none without the tools it refers to.
+		if len(req.Tools) > 0 {
+			req.ToolChoice = toolChoiceNone
+		}
 		return nil
 	case schema.ToolChoiceAllowed:
 		if len(allowedToolNames) > 0 {

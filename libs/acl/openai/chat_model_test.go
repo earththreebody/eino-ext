@@ -896,14 +896,21 @@ func TestPopulateToolChoice(t *testing.T) {
 		assert.Nil(t, req.ToolChoice)
 	})
 
-	t.Run("tool choice forbidden", func(t *testing.T) {
-		req := &openai.ChatCompletionRequest{}
+	t.Run("tool choice forbidden with tools", func(t *testing.T) {
+		req := &openai.ChatCompletionRequest{Tools: []openai.Tool{{Type: openai.ToolTypeFunction, Function: &openai.FunctionDefinition{Name: "test-tool"}}}}
 		options := &model.Options{
 			ToolChoice: ptr(schema.ToolChoiceForbidden),
 		}
 		err := populateToolChoice(req, options.ToolChoice, options.AllowedToolNames)
 		assert.NoError(t, err)
 		assert.Equal(t, "none", req.ToolChoice)
+	})
+
+	t.Run("tool choice forbidden without tools is omitted", func(t *testing.T) {
+		req := &openai.ChatCompletionRequest{}
+		err := populateToolChoice(req, ptr(schema.ToolChoiceForbidden), nil)
+		assert.NoError(t, err)
+		assert.Nil(t, req.ToolChoice)
 	})
 
 	t.Run("tool choice allowed", func(t *testing.T) {
